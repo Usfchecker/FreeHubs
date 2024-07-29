@@ -1,0 +1,348 @@
+--Lib--
+    local library = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ShaddowScripts/Main/main/Library"))()
+    local Main = library:CreateWindow("simply.fun mobile","Deep Sea")
+--Tabs--
+    local tab3 = Main:CreateTab("Auto Farm")
+    local tab4 = Main:CreateTab("Teleports")
+--AF Lib--
+    local function executeScript()
+    local partNameToDelete = "backp"
+    local modelNameToDelete = "boxing gym"
+    local function deleteTruckProp()
+    local cratetruck2 = game.Workspace:FindFirstChild("cratetruck2")
+    if cratetruck2 then
+    local truckProp = cratetruck2:FindFirstChild("TruckProp")
+    if truckProp then
+    truckProp:Destroy()
+    else
+    warn("Part '" .. partNameToDelete .. "' not found in 'cratetruck2'.")
+    end
+    else
+    warn("Model 'cratetruck2' not found in Workspace.")
+    end
+    end
+    local function deleteChild(parent, childName)
+    local child = parent:FindFirstChild(childName)
+    if child then
+    child:Destroy()
+    else
+    warn("Child '" .. childName .. "' not found under parent.")
+    end
+    end
+    local function deleteBoxingGym()
+    local mapFolder = game.Workspace:FindFirstChild("Map")
+    if mapFolder then
+    local boxJob = mapFolder:FindFirstChild("Box Job")
+    if boxJob then
+    deleteChild(boxJob, modelNameToDelete)
+    else
+    warn("Model 'Box Job' not found under 'Map'.")
+    end
+    else
+    warn("Folder 'Map' not found in Workspace.")
+    end
+    end
+    local function deletePartsByNameUnderParent(parent, parentName, name)
+    local children = parent:GetChildren()
+    for _, child in ipairs(children) do
+    if child:IsA("Model") or child:IsA("BasePart") then
+    if child.Name == name and child.Parent.Name == parentName then
+    child:Destroy()
+    elseif child:IsA("Model") then
+    deletePartsByNameUnderParent(child, parentName, name)
+    end
+    end
+    end
+    end
+    local function modifyProximityPrompts()
+    local function modifyPrompt(prompt)
+    if prompt then
+    prompt.HoldDuration = 0
+    prompt.MaxActivationDistance = 10
+    else
+    warn("ProximityPrompt not found or invalid.")
+    end
+    end
+    local trashcan = game.Workspace:FindFirstChild("trashcan")
+    if trashcan then
+    local prox = trashcan:FindFirstChild("prox")
+    if prox then
+    local attachment = prox:FindFirstChild("Attachment")
+    if attachment then
+    modifyPrompt(attachment:FindFirstChildOfClass("ProximityPrompt"))
+    else
+    warn("Attachment not found under 'prox'.")
+    end
+    else
+    warn("Part 'prox' not found under 'Trashcan'.")
+    end
+    else
+    warn("Model 'Trashcan' not found in Workspace.")
+    end
+    local garbageDumpster = game.Workspace:FindFirstChild("GarbageDumpster")
+    if garbageDumpster then
+    modifyPrompt(garbageDumpster:FindFirstChild("Attachment"):FindFirstChildOfClass("ProximityPrompt"))
+    else
+    warn("Model 'GarbageDumpster' not found in Workspace.")
+    end
+    for _, obj in ipairs(game:GetDescendants()) do
+    if obj:IsA("ProximityPrompt") then
+    modifyPrompt(obj)
+    end
+    end
+    end
+    local function searchAndDelete()
+    local map = game.Workspace.Map
+    local trashJob = map:FindFirstChild("Trash Job")
+    if trashJob then
+    deletePartsByNameUnderParent(trashJob, "Trash Job", partNameToDelete)
+    else
+    warn("Model 'Trash Job' not found under 'Map'.")
+    end
+    end    
+    while true do
+    modifyProximityPrompts()
+    deleteTruckProp()
+    deleteBoxingGym()
+    searchAndDelete()
+    wait(100)
+    end
+    end
+    tab3:CreateButton("MUST CLICK", executeScript)
+
+--Trash Job--
+    local function callback()
+    local function teleportAndHoldE(x, y, z)
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    humanoidRootPart.CFrame = CFrame.new(x, y, z)
+    local virtualInputManager = game:GetService("VirtualInputManager")
+    virtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+    wait(5)
+    virtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+    end
+    teleportAndHoldE(717.5482788085938, 3.5371992588043213, 169.90029907226562)
+    end
+    tab3:CreateButton("Start Trash Job", callback)
+--Trash Farm--
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+    local backpack = player.Backpack
+    local coordinates = {
+    Vector3.new(698.394287109375, 3.5371994972229004, 170.7313232421875),
+    Vector3.new(729.8390502929688, 3.4121947288513184, 211.96453857421875)
+    }
+    local stopScript = true
+    local running = false
+    local function HoldEFor2Seconds()
+    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.E, false, game)
+    wait(1)
+    game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.E, false, game)
+    end
+    local function MoveBackAndForth()
+    while running do
+    for i = 1, #coordinates do
+    if not running then return end
+    local coord = coordinates[i]
+    humanoid.WalkSpeed = 22
+    humanoid:MoveTo(coord)
+    humanoid.MoveToFinished:Wait()
+    if not running then return end
+    if backpack then
+    local crate = backpack:FindFirstChild("TrashBag")
+    if crate then
+    crate.Parent = character
+    end
+    end
+    HoldEFor2Seconds()
+    end
+    end
+    end
+    local function StartScript()
+    running = true
+    stopScript = false
+    MoveBackAndForth()
+    end
+    local function StopScript()
+    running = false
+    stopScript = true
+    humanoid.WalkSpeed = 16
+    end
+    local function OnToggleChanged()
+    if stopScript then
+    StartScript()
+    else
+    StopScript()
+    end
+    end
+    game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.F1 then
+    if running then
+    StopScript()
+    else
+    StartScript()
+    end
+    end
+    end)
+    tab3:CreateToggle("Trash Farm", OnToggleChanged)
+--Box Job--
+    local function callback()
+    local function teleportAndHoldE(x, y, z)
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    humanoidRootPart.CFrame = CFrame.new(x, y, z)  
+    local virtualInputManager = game:GetService("VirtualInputManager")
+    virtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+    wait(5)
+    virtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+    end
+    teleportAndHoldE(-579.7178344726562, 3.5371451377868652, -71.9795913696289)
+    end
+    tab3:CreateButton("Start Box Job", callback)
+--Box Farm--
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+    local backpack = player.Backpack
+    local coordinates = {
+    Vector3.new(-547.0848388671875, 3.412132740020752, -85.62256622314453),
+    Vector3.new(-403.59765625, 3.4121932983398438, -66.5368881225586)
+    }
+    local stopScript = true
+    local running = false
+    local function HoldEFor2Seconds()
+    game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.E, false, game)
+    wait(1)
+    game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.E, false, game)
+    end
+    local function teleportTo(target)
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    local currentPosition = humanoidRootPart.Position
+    local distanceThreshold = 0.1
+    while (target - currentPosition).magnitude > distanceThreshold do
+    local direction = (target - currentPosition).unit
+    local newPosition = currentPosition + direction * 3.4
+    if (newPosition - target).magnitude < (currentPosition - target).magnitude then
+    humanoidRootPart.CFrame = CFrame.new(newPosition)
+    else
+    humanoidRootPart.CFrame = CFrame.new(target)
+    break
+    end
+    wait(0.1)
+    currentPosition = humanoidRootPart.Position
+    end
+    end
+    local function MoveBackAndForth()
+    while running do
+    for i = 1, #coordinates do
+    if not running then return end
+    local coord = coordinates[i]
+    teleportTo(coord)
+    if not running then return end
+    humanoid.WalkSpeed = 22
+    humanoid:MoveTo(coord)
+    humanoid.MoveToFinished:Wait()
+    if not running then return end
+    if backpack then
+    local crate = backpack:FindFirstChild("Crate")
+    if crate then
+    crate.Parent = character
+    end
+    end
+    HoldEFor2Seconds()
+    end
+    end
+    end
+    local function StartScript()
+    running = true
+    stopScript = false
+    MoveBackAndForth()
+    end
+    local function StopScript()
+    running = false
+    stopScript = true
+    humanoid.WalkSpeed = 16
+    end
+    local function OnToggleChanged()
+    if stopScript then
+    StartScript()
+    else
+    StopScript()
+    end
+    end
+    game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.F1 then
+    OnToggleChanged()
+    end
+    end)
+    tab3:CreateToggle("Box Farm", OnToggleChanged)
+--Teleports Noclip--
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local Plr = Players.LocalPlayer
+    local noclipEnabled = false
+    local Stepped
+    local function enableNoclip()
+    Stepped = RunService.Stepped:Connect(function()
+    if noclipEnabled then
+    for _, child in ipairs(game.Workspace:GetChildren()) do
+    if child.Name == Plr.Name then
+    for _, part in ipairs(child:GetChildren()) do
+    if part:IsA("BasePart") then
+    part.CanCollide = false
+    end
+    end
+    end
+    end
+    end
+    end)
+    end
+    local function toggleNoclip()
+    noclipEnabled = not noclipEnabled
+    if not noclipEnabled then
+    if Stepped then
+    Stepped:Disconnect()
+    end
+    else
+    enableNoclip()
+    end
+    end
+    local function ToggleNoclip()
+    toggleNoclip()
+    end
+    tab4:CreateToggle("Noclip", ToggleNoclip)
+--Teleports--
+    local locations = {
+    BoxJob = Vector3.new(-520.0985107421875, 3.4121336936950684, -82.7499008178711),
+    TrashJob = Vector3.new(709.990234375, 3.5371994972229004, 157.0732421875),
+    }
+    local function teleportTo(target)
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    local distanceThreshold = 0.1
+    while (target - humanoidRootPart.Position).magnitude > distanceThreshold do
+    local direction = (target - humanoidRootPart.Position).unit
+    local newPosition = humanoidRootPart.Position + direction * 3.4
+    if (newPosition - target).magnitude < (humanoidRootPart.Position - target).magnitude then
+    humanoidRootPart.CFrame = CFrame.new(newPosition)
+    else
+    humanoidRootPart.CFrame = CFrame.new(target)
+    break
+    end
+    wait(0.1)
+    end
+    end
+    local function callback(item)
+    local targetPosition = locations[item]
+    if targetPosition then
+    teleportTo(targetPosition)
+    else
+    end
+    end
+    tab4:CreateDropdown("Teleports", 
+    {"BoxJob", "TrashJob"},
+    callback)
